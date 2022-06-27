@@ -20,16 +20,31 @@ int main(int argc, char *argv[])
         message[i] = myid;
     }
 
+
+    int nrecv;
+    
     // TODO: Implement sending and receiving as defined in the assignment
     // Send msgsize elements from the array "message", and receive into 
     // "receiveBuffer"
     if (myid == 0) {
+        MPI_Status stat;
 
-        printf("Rank %i received %i elements, first %i\n", myid, nrecv, receiveBuffer[0]);
+        MPI_Send(message.data(), msgsize, MPI_INT, 1, 0, MPI_COMM_WORLD);
+        MPI_Recv(receiveBuffer.data(), arraysize, MPI_INT, 1, 0, MPI_COMM_WORLD, &stat);
+
+        MPI_Get_count(&stat, MPI_INT, &nrecv);
+
+        //printf("Rank %i received %i elements, first %i\n", myid, nrecv, receiveBuffer[0]);
     } else if (myid == 1) {
+        MPI_Status stat;
 
-        printf("Rank %i received %i elements, first %i\n", myid, nrecv, receiveBuffer[0]);
+        MPI_Recv(receiveBuffer.data(), arraysize, MPI_INT, 0, 0, MPI_COMM_WORLD, &stat);
+        MPI_Send(message.data(), msgsize, MPI_INT, 0, 0, MPI_COMM_WORLD);
+
+        MPI_Get_count(&stat, MPI_INT, &nrecv);
     }
+    
+    printf("Rank %i received %i elements, first %i\n", myid, nrecv, receiveBuffer[0]);
 
     MPI_Finalize();
     return 0;
