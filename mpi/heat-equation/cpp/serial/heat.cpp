@@ -1,7 +1,6 @@
 #include "heat.hpp"
 #include "matrix.hpp"
 #include <iostream>
-#include <mpi.h>
 
 void Field::setup(int nx_in, int ny_in) 
 {
