@@ -36,12 +36,18 @@ int main(int argc, char* argv[]) {
 
     /* Create the 2D Cartesian communicator */
     /* TO DO */
+    MPI_Comm cartcomm;
+    int perids[2] = {1,1};
+    MPI_Cart_create(MPI_COMM_WORLD, 2, dims, perids, 1, &cartcomm);
 
     /* Find out and store the neighboring ranks */
     /* TO DO */
+    MPI_Cart_shift(cartcomm, 0, 1, &neighbors[0], &neighbors[1]);
+    MPI_Cart_shift(cartcomm, 1, 1, &neighbors[2], &neighbors[3]);
 
     /* Find out and store also the Cartesian coordinates of a rank */
     /* TO DO */
+    MPI_Cart_coords(cartcomm, my_id, 2, coords);
 
     for (irank = 0; irank < ntasks; irank++) {
         if (my_id == irank) {
