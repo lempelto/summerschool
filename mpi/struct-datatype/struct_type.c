@@ -36,20 +36,45 @@ int main(int argc, char *argv[])
   MPI_Datatype particletype, temptype, types[cnt];
   MPI_Aint disp[cnt], dist[2], lb, extent;
   int blocklen[cnt];
+  //blocklen[0], blocklen[1], blocklen[2] = 3, 1, 2;
+  blocklen[0] = 3; 
+  blocklen[1] = 1;
+  blocklen[2] = 2;
+  MPI_Get_address(&particles[0].coords, &disp[0]);
+  MPI_Get_address(&particles[0].charge, &disp[1]);
+  MPI_Get_address(&particles[0].label, &disp[2]);
+  disp[2] -= disp[0];
+  disp[1] -= disp[0];
+  disp[0] = 0;
+  //types[0], types[1], types[2] = MPI_FLOAT, MPI_INT, MPI_CHAR;
+  types[0] = MPI_FLOAT;
+  types[1] = MPI_INT;
+  types[2] = MPI_CHAR;
+  MPI_Type_create_struct(cnt, blocklen, disp, types, &particletype);
+  MPI_Type_commit(&particletype);
 
-  // TODO: check extent (not really necessary on most platforms) 
+  // TODO: check extent (not really necessary on most platforms)
+  MPI_Type_get_extent(particletype, &lb, &extent);
+  MPI_Datatype ot = particletype;
+  MPI_Type_create_resized(ot, lb, sizeof(particles[0]), &particletype);
+  MPI_Type_commit(&particletype);
+  MPI_Type_free(&ot);
 
   // communicate using the created particletype
   t1 = MPI_Wtime();
   if (myid == 0) {
     for (i=0; i < reps; i++) // multiple sends for better timing
       // TODO: send  
+      MPI_Send(particles, n, particletype, 1, 1, MPI_COMM_WORLD);
 
   } else if (myid == 1) {
     for (i=0; i < reps; i++)
       // TODO: receive
+      MPI_Recv(particles, n, particletype, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
   }
+
+  MPI_Type_free(&particletype);
 
   // TODOs end
 
