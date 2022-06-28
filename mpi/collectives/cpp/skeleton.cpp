@@ -35,10 +35,16 @@ int main(int argc, char *argv[])
 
     /* TODO: use a single collective communication call (and maybe prepare
      *       some parameters for the call) */
+    //MPI_Bcast(sendbuf.data(), 2*NTASKS, MPI_INT, 0, MPI_COMM_WORLD);
+    //MPI_Scatter(sendbuf.data(), 2, MPI_INT, recvbuf.data(), 2*NTASKS, MPI_INT, 0, MPI_COMM_WORLD);
+    /*const int recvcounts[4] = {1,1,2,4};
+    const int displs[4] = {0,1,2,4};
+    MPI_Gatherv(sendbuf.data(), recvcounts[rank], MPI_INT, recvbuf.data(), recvcounts, displs, MPI_INT, 1, MPI_COMM_WORLD);*/
+    MPI_Alltoall(sendbuf.data(), 2, MPI_INT, recvbuf.data(), 2, MPI_INT, MPI_COMM_WORLD);
 
     /* Print data that was received */
     /* TODO: add correct buffer */
-    print_buffers(printbuf.data(), ..., 2 * NTASKS);
+    print_buffers(printbuf.data(), recvbuf.data(), 2 * NTASKS);
 
     MPI_Finalize();
     return 0;
