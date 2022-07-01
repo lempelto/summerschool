@@ -14,8 +14,8 @@
 void write_field(const Field& field, const int iter, const ParallelData parallel)
 {
 
-    auto height = field.nx * parallel.size;
-    auto width = field.ny;
+    auto height = field.nx * parallel.dimensions[0];
+    auto width = field.ny * parallel.dimensions[1];
 
     // array for MPI sends and receives
     auto tmp_mat = Matrix<double> (field.nx, field.ny); 
@@ -24,24 +24,28 @@ void write_field(const Field& field, const int iter, const ParallelData parallel
         // Copy the inner data
         auto full_data = Matrix<double>(height, width);
         for (int i = 0; i < field.nx; i++)
-            for (int j = 0; j < field.ny; j++) 
-                 full_data(i, j) = field(i + 1, j + 1);
+            for (int j = 0; j < field.ny; j++)
+                 full_data(i + parallel.coords[0] * field.nx, j + parallel.coords[1] * field.ny) = field(i + 1, j + 1);
           
         // Receive data from other ranks
         for (int p = 1; p < parallel.size; p++) {
+            int pcoords[2];
+            MPI_Cart_coords(parallel.communicator, p, 2, pcoords);
             MPI_Recv(tmp_mat.data(), field.nx * field.ny,
                      MPI_DOUBLE, p, 22, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             // Copy data to full array 
-            for (int i = 0; i < field.nx; i++) 
-                for (int j = 0; j < field.ny; j++) 
-                     full_data(i + p * field.nx, j) = tmp_mat(i, j);
+            for (int i = 0; i < field.nx; i++) {
+                for (int j = 0; j < field.ny; j++) {
+                    full_data(i + pcoords[0] * field.nx, j + pcoords[1] * field.ny) = tmp_mat(i, j);
+                }
+            }
         }
         // Write out the data to a png file 
         std::ostringstream filename_stream;
         filename_stream << "heat_" << std::setw(4) << std::setfill('0') << iter << ".png";
         std::string filename = filename_stream.str();
         save_png(full_data.data(), height, width, filename.c_str(), 'c');
-    } else {
+        } else {
         // Send data 
         for (int i = 0; i < field.nx; i++)
             for (int j = 0; j < field.ny; j++)

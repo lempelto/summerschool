@@ -19,6 +19,7 @@ int main(int argc, char **argv)
 
     ParallelData parallelization; // Parallelization info
 
+    // printf("|  me:%d   u:%d d:%d l:%d r:%d\n", parallelization.rank, parallelization.nup, parallelization.ndown, parallelization.nleft, parallelization.nright);
     int nsteps;                 // Number of time steps
     Field current, previous;    // Current and previous temperature fields
     initialize(argc, argv, current, previous, nsteps, parallelization);
