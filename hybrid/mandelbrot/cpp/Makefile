@@ -7,7 +7,7 @@ COMMONDIR=../../../heat/common
 ifeq ($(COMP),intel)
 CXX=icpc
 CC=icc
-CCFLAGS=-g -qopenmp -O3 -xHost -I$(COMMONDIR)
+CCFLAGS=-g -qopenmp -xHost -O3 -I$(COMMONDIR)
 LDFLAGS=
 LIBS=-lpng
 endif
