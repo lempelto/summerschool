@@ -3,6 +3,12 @@
 #include <math.h>
 
 // TODO: add a device kernel that calculates y = a * x + y
+__global__ void saxpy(float a, float *x, float *y, int n) {
+    int id = threadIdx.x + blockIdx.x * blockDim.x;
+    if (id < n) {
+        y[id] = a * x[id] + y[id];
+    }
+}
 
 int main(void)
 {
@@ -18,15 +24,26 @@ int main(void)
         y[i] = cos(i) * 1.1;
         y_ref[i] = a * x[i] + y[i];
     }
-
+       
     // TODO: allocate vectors x_ and y_ on the GPU
     // TODO: copy initial values from CPU to GPU (x -> x_ and y -> y_)
+    
+    //float *a_;
+    hipMalloc(&x_, sizeof(float)*n);
+    hipMalloc(&y_, sizeof(float)*n);
+    
+    hipMemcpy(x_, x, sizeof(float)*n, hipMemcpyHostToDevice);
+    hipMemcpy(y_, y, sizeof(float)*n, hipMemcpyHostToDevice);
 
     // TODO: define grid dimensions
     // TODO: launch the device kernel
-    hipLaunchKernelGGL(...);
+    dim3 blocks(32);
+    dim3 threads(64);
+    hipLaunchKernelGGL(saxpy, blocks, threads, 0, 0, a, x_, y_, n);
 
     // TODO: copy results back to CPU (y_ -> y)
+    hipMemcpy(x, x_, sizeof(float)*n, hipMemcpyDeviceToHost);
+    hipMemcpy(y, y_, sizeof(float)*n, hipMemcpyDeviceToHost);
 
     // confirm that results are correct
     float error = 0.0;
