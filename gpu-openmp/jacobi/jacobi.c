@@ -22,12 +22,17 @@ int main()
   }
 
   double t0 = omp_get_wtime();
+  #pragma omp target data map(tofrom:u, unew)
+  {
   // Iterate
+  #pragma omp target teams
+  #pragma omp distribute
   for (int n = 0; n < niter; n++) {
 
     // TODO start: offload the two stencil updates
 
     // Stencil update 1
+    #pragma omp distribute parallel for
     for (int i = 1; i < nx - 1; i++) {
       for (int j = 1; j < ny - 1; j++) {
       int ind = i * ny + j;
@@ -41,6 +46,7 @@ int main()
     }
 
     // "Swap" the arrays, stencil update 2
+    #pragma omp distribute parallel for
     for (int i = 1; i < nx - 1; i++) {
       for (int j = 1; j < ny - 1; j++) {
       int ind = i * ny + j;
@@ -52,10 +58,9 @@ int main()
                             unew[jp] - 2.0 * unew[ind] + unew[jm]);
       }
     }
-
     // TODO end
-
   }
+  } // data area
 
   double t1 = omp_get_wtime();
   // Check final result

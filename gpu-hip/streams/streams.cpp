@@ -27,7 +27,7 @@ int main(int argc, char **argv)
   const int blockSize = 256, nStreams = 4;
   const int n = 4 * 1024 * blockSize * nStreams;
   const int bytes = n * sizeof(float);
-   
+  
   int devId = 0;
   if (argc > 1) devId = atoi(argv[1]);
 
@@ -64,8 +64,14 @@ int main(int argc, char **argv)
   hipEventElapsedTime(&duration, startEvent, stopEvent);
   printf("Duration for sequential transfer and execute: %f (ms)\n", duration);
   printf("  max error: %e\n", maxError(a, n));
-
+  
+  hipStream_t streams[nStreams];
   // TODO: Create `nStream` streams here (nStream is defined already to be 4)
+  for (int i = 0; i < nStreams; i++)
+  {
+    hipStreamCreate(streams[i]);
+  }
+  
 
   // Async case 1: loop over {kernel}
   {
@@ -85,7 +91,7 @@ int main(int argc, char **argv)
   }
 
   // Async case 2: loop over {async copy, kernel, async copy}
-{
+  {
     memset(a, 0, bytes);
   
     // TODO: Same as case 1, except use asynchronous memcopies 
@@ -115,6 +121,11 @@ int main(int argc, char **argv)
   hipHostFree(a);
 
   // TODO: Destroy streams here
+  for (int i = 0; i < nStreams; i++)
+  {
+    hipStreamDestroy(streams[i])
+  }
+  
 
   return 0;
 }
